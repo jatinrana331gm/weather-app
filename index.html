@@ -91,8 +91,8 @@
                 return;
             }
             const apiKey = 'd974d1ce4a454c9ca45135909250302';
-            const url = `http://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${location}&days=7&aqi=yes&alerts=no`;
-            
+            const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${location}&days=7&aqi=yes&alerts=no`;
+
             try {
                 const response = await fetch(url);
                 const data = await response.json();
