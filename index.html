@@ -17,37 +17,34 @@
             border-radius: 10px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
             display: inline-block;
+            background: white;
         }
         input {
             padding: 10px;
-            width: 80%;
+            width: 70%;
             margin-bottom: 10px;
         }
         button {
-            padding: 10px 20px;
+            padding: 10px 15px;
             background-color: #007BFF;
             color: white;
             border: none;
             cursor: pointer;
+            margin: 5px;
+            border-radius: 5px;
         }
-        #result {
-            margin-top: 20px;
-            font-size: 18px;
+        button:hover {
+            background-color: #0056b3;
         }
-        .forecast-container {
-            margin-top: 20px;
-            display: flex;
-            justify-content: space-around;
-            text-align: center;
+        #error {
+            color: red;
+            font-weight: bold;
         }
-        .forecast-item {
-            background: #e3f2fd;
-            padding: 10px;
-            border-radius: 8px;
-        }
-        .icon {
-            width: 50px;
-            height: 50px;
+        #loading {
+            display: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
         }
     </style>
 </head>
@@ -56,8 +53,10 @@
         <h2>Weather App</h2>
         <input type="text" id="location" placeholder="Enter Location">
         <button onclick="getWeather()">Get Weather</button>
+        <button onclick="getLocationWeather()">Use My Location</button>
+        <p id="loading">Fetching Weather...</p>
+        <div id="error"></div>
         <div id="result"></div>
-        <div class="forecast-container" id="forecast"></div>
     </div>
     
     <script>
@@ -68,7 +67,7 @@
             hour = hour % 12 || 12;
             return { date, time: `${hour}:${minute} ${ampm}` };
         }
-        
+
         function updateBackground(condition) {
             const body = document.getElementById('weatherBody');
             if (condition.includes("Sunny")) {
@@ -77,65 +76,98 @@
                 body.style.background = "url('https://source.unsplash.com/1600x900/?cloudy') no-repeat center center/cover";
             } else if (condition.includes("Rain")) {
                 body.style.background = "url('https://source.unsplash.com/1600x900/?rain') no-repeat center center/cover";
-            } else if (condition.includes("Snow")) {
-                body.style.background = "url('https://source.unsplash.com/1600x900/?snow') no-repeat center center/cover";
             } else {
                 body.style.background = "url('https://source.unsplash.com/1600x900/?weather') no-repeat center center/cover";
             }
         }
-        
-        async function getWeather() {
-            const location = document.getElementById('location').value;
+
+        async function getWeather(query) {
+            const location = query || document.getElementById('location').value;
             if (!location) {
                 alert('Please enter a location');
                 return;
             }
+            
             const apiKey = 'd974d1ce4a454c9ca45135909250302';
-            const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${location}&days=7&aqi=yes&alerts=no`;
-
+            const url = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${location}&days=5&aqi=yes&alerts=yes`;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error').innerHTML = '';
+            
             try {
                 const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch weather data');
                 const data = await response.json();
-                if (data.error) {
-                    document.getElementById('result').innerHTML = "Location not found.";
-                } else {
-                    const formattedDateTime = formatTime(data.location.localtime);
-                    document.getElementById('result').innerHTML = `
-                        <p><strong>Location:</strong> ${data.location.name}, ${data.location.country}</p>
-                        <p><strong>Temperature:</strong> ${data.current.temp_c}°C</p>
-                        <p><strong>Condition:</strong> ${data.current.condition.text} <img class="icon" src="${data.current.condition.icon}" alt="Weather icon"></p>
-                        <p><strong>Humidity:</strong> ${data.current.humidity}%</p>
-                        <p><strong>Precipitation:</strong> ${data.current.precip_mm} mm</p>
-                        <p><strong>Wind Speed:</strong> ${data.current.wind_kph} kph</p>
-                        <p><strong>Wind Direction:</strong> ${data.current.wind_dir}</p>
-                        <p><strong>Storm Chance:</strong> ${data.forecast.forecastday[0].day.daily_chance_of_storm}%</p>
-                        <p><strong>Rain Chance:</strong> ${data.forecast.forecastday[0].day.daily_chance_of_rain}%</p>
-                        <p><strong>Cloud Cover:</strong> ${data.current.cloud}%</p>
-                        <p><strong>Moonrise:</strong> ${data.forecast.forecastday[0].astro.moonrise}</p>
-                        <p><strong>Moonset:</strong> ${data.forecast.forecastday[0].astro.moonset}</p>
-                        <p><strong>Air Quality (PM2.5):</strong> ${data.current.air_quality.pm2_5}</p>
-                        <p><strong>Date:</strong> ${formattedDateTime.date}</p>
-                        <p><strong>Time:</strong> ${formattedDateTime.time}</p>
-                    `;
-                    
-                    updateBackground(data.current.condition.text);
-                    
-                    let forecastHtml = '';
-                    data.forecast.forecastday.forEach(day => {
-                        forecastHtml += `
-                            <div class="forecast-item">
-                                <p><strong>${day.date}</strong></p>
-                                <img class="icon" src="${day.day.condition.icon}" alt="Weather icon">
-                                <p>${day.day.avgtemp_c}°C</p>
-                                <p>High: ${day.day.maxtemp_c}°C</p>
-                                <p>Low: ${day.day.mintemp_c}°C</p>
-                            </div>
+                
+                const formattedDateTime = formatTime(data.location.localtime);
+
+                // Display Current Weather
+                document.getElementById('result').innerHTML = `
+                    <p><strong>Location:</strong> ${data.location.name}, ${data.location.country}</p>
+                    <p><strong>Temperature:</strong> ${data.current.temp_c}°C</p>
+                    <p><strong>Condition:</strong> ${data.current.condition.text} <img src="${data.current.condition.icon}" alt="Weather icon"></p>
+                    <p><strong>Humidity:</strong> ${data.current.humidity}%</p>
+                    <p><strong>Precipitation:</strong> ${data.current.precip_mm} mm</p>
+                    <p><strong>Rain Chance:</strong> ${data.forecast.forecastday[0].day.daily_chance_of_rain}%</p>
+                    <p><strong>Wind Speed:</strong> ${data.current.wind_kph} kph</p>
+                    <p><strong>Wind Direction:</strong> ${data.current.wind_dir}</p>
+                    <p><strong>Cloud Cover:</strong> ${data.current.cloud}%</p>
+                    <p><strong>Moonrise:</strong> ${data.forecast.forecastday[0].astro.moonrise}</p>
+                    <p><strong>Moonset:</strong> ${data.forecast.forecastday[0].astro.moonset}</p>
+                    <p><strong>Air Quality (PM2.5):</strong> ${data.current.air_quality.pm2_5}</p>
+                    <p><strong>Date:</strong> ${formattedDateTime.date}</p>
+                    <p><strong>Time:</strong> ${formattedDateTime.time}</p>
+                `;
+
+                // Display Storm Alerts if any
+                if (data.alerts && data.alerts.alert.length > 0) {
+                    let alertsHTML = `<p><strong>Storm Alerts:</strong></p>`;
+                    data.alerts.alert.forEach(alert => {
+                        alertsHTML += `
+                            <p><strong>Alert:</strong> ${alert.headline}</p>
+                            <p><strong>Description:</strong> ${alert.description}</p>
                         `;
                     });
-                    document.getElementById('forecast').innerHTML = forecastHtml;
+                    document.getElementById('result').innerHTML += alertsHTML;
+                } else {
+                    document.getElementById('result').innerHTML += `<p>No storm alerts at the moment.</p>`;
                 }
+
+                // Multi-day Forecast
+                let forecastHTML = '<h3>5-Day Forecast:</h3>';
+                data.forecast.forecastday.forEach(day => {
+                    forecastHTML += `
+                        <div>
+                            <p><strong>${day.date}</strong></p>
+                            <p>Temperature: ${day.day.avgtemp_c}°C</p>
+                            <p>Condition: ${day.day.condition.text}</p>
+                            <p>Rain Chance: ${day.day.daily_chance_of_rain}%</p>
+                            <p>Max Temp: ${day.day.maxtemp_c}°C | Min Temp: ${day.day.mintemp_c}°C</p>
+                        </div>
+                    `;
+                });
+                document.getElementById('result').innerHTML += forecastHTML;
+
+                // Update Background based on weather condition
+                updateBackground(data.current.condition.text);
+
             } catch (error) {
-                document.getElementById('result').innerHTML = "Error fetching weather data.";
+                document.getElementById('error').innerHTML = 'Error fetching weather data. Please try again.';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function getLocationWeather() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    getWeather(`${lat},${lon}`);
+                }, () => {
+                    document.getElementById('error').innerHTML = 'Geolocation permission denied.';
+                });
+            } else {
+                document.getElementById('error').innerHTML = 'Geolocation is not supported by your browser.';
             }
         }
     </script>
