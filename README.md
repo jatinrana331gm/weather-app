@@ -30,16 +30,17 @@ A dynamic **Weather App** built with **HTML, CSS, and JavaScript**, providing re
 
 ---
 
-## 📷 Screenshots
+### 📷 Screenshots
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/jatinrana331gm/weather-app/main/screenshots/1.png?raw=true" width="300" />
-  <img src="https://raw.githubusercontent.com/jatinrana331gm/weather-app/main/screenshots/2.png?raw=true" width="300" />
+  <img src="https://raw.githubusercontent.com/jatinrana331gm/weather-app/main/screenshots/1.jpg" width="300" />
+  <img src="https://raw.githubusercontent.com/jatinrana331gm/weather-app/main/screenshots/2.jpg" width="300" />
 </p>
 <p align="center">
-  <img src="https://raw.githubusercontent.com/jatinrana331gm/weather-app/main/screenshots/3.png?raw=true" width="300" />
-  <img src="https://raw.githubusercontent.com/jatinrana331gm/weather-app/main/screenshots/4.png?raw=true" width="300" />
+  <img src="https://raw.githubusercontent.com/jatinrana331gm/weather-app/main/screenshots/3.jpg" width="300" />
+  <img src="https://raw.githubusercontent.com/jatinrana331gm/weather-app/main/screenshots/4.jpg" width="300" />
 </p>
+
 
 ---
 
